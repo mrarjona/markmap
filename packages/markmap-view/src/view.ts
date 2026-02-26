@@ -245,10 +245,27 @@ export class Markmap {
     const tree = layout.hierarchy(this.state.data);
     layout(tree);
     const fnodes = tree.descendants();
+
+    // Determine which first-level nodes go to the left side.
+    // The first half (Math.floor(n/2)) go left; the rest go right.
+    // For odd counts, the extra child goes to the right side.
+    // The root node is not in leftSet and keeps side='right' (neutral center).
+    const firstLevelChildren = tree.children || [];
+    const leftCount = Math.floor(firstLevelChildren.length / 2);
+    const leftSet = new Set<INode>();
+    firstLevelChildren.slice(0, leftCount).forEach((fnode) => {
+      fnode.each((n) => leftSet.add(n.data));
+    });
+
+    const rootWidth = tree.ySize - spacingHorizontal;
     fnodes.forEach((fnode) => {
       const node = fnode.data;
+      const isLeft = leftSet.has(node);
+      node.state.side = isLeft ? 'left' : 'right';
       node.state.rect = {
-        x: fnode.y,
+        x: isLeft
+          ? rootWidth - fnode.y - fnode.ySize + spacingHorizontal
+          : fnode.y,
         y: fnode.x - fnode.xSize / 2,
         width: fnode.ySize - spacingHorizontal,
         height: fnode.xSize,
@@ -491,7 +508,9 @@ export class Markmap {
       .attr('d', (d) => {
         const originRect = getOriginSourceRect(d.target);
         const pathOrigin: [number, number] = [
-          originRect.x + originRect.width,
+          d.target.state.side === 'left'
+            ? originRect.x
+            : originRect.x + originRect.width,
           originRect.y + originRect.height,
         ];
         return linkShape({ source: pathOrigin, target: pathOrigin });
@@ -518,14 +537,21 @@ export class Markmap {
 
     mmGEnter.attr('transform', (d) => {
       const originRect = getOriginSourceRect(d);
-      return `translate(${originRect.x + originRect.width - d.state.rect.width},${
+      const x =
+        d.state.side === 'left'
+          ? originRect.x
+          : originRect.x + originRect.width - d.state.rect.width;
+      return `translate(${x},${
         originRect.y + originRect.height - d.state.rect.height
       })`;
     });
     this.transition(mmGExit)
       .attr('transform', (d) => {
         const targetRect = getOriginTargetRect(d);
-        const targetX = targetRect.x + targetRect.width - d.state.rect.width;
+        const targetX =
+          d.state.side === 'left'
+            ? targetRect.x
+            : targetRect.x + targetRect.width - d.state.rect.width;
         const targetY = targetRect.y + targetRect.height - d.state.rect.height;
         return `translate(${targetX},${targetY})`;
       })
@@ -540,11 +566,11 @@ export class Markmap {
       childSelector<SVGLineElement>('line'),
     );
     this.transition(mmLineExit)
-      .attr('x1', (d) => d.state.rect.width)
+      .attr('x1', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
       .attr('stroke-width', 0);
     mmLineEnter
-      .attr('x1', (d) => d.state.rect.width)
-      .attr('x2', (d) => d.state.rect.width);
+      .attr('x1', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
+      .attr('x2', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width));
     mmLineMerge
       .attr('y1', (d) => d.state.rect.height + lineWidth(d) / 2)
       .attr('y2', (d) => d.state.rect.height + lineWidth(d) / 2);
@@ -559,7 +585,7 @@ export class Markmap {
     );
     this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
     mmCircleMerge
-      .attr('cx', (d) => d.state.rect.width)
+      .attr('cx', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
       .attr('cy', (d) => d.state.rect.height + lineWidth(d) / 2);
     this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
 
@@ -573,7 +599,9 @@ export class Markmap {
       .attr('d', (d) => {
         const targetRect = getOriginTargetRect(d.target);
         const pathTarget: [number, number] = [
-          targetRect.x + targetRect.width,
+          d.target.state.side === 'left'
+            ? targetRect.x
+            : targetRect.x + targetRect.width,
           targetRect.y + targetRect.height + lineWidth(d.target) / 2,
         ];
         return linkShape({ source: pathTarget, target: pathTarget });
@@ -587,14 +615,19 @@ export class Markmap {
       .attr('d', (d) => {
         const origSource = d.source;
         const origTarget = d.target;
+        const isLeft = origTarget.state.side === 'left';
         const source: [number, number] = [
-          origSource.state.rect.x + origSource.state.rect.width,
+          isLeft
+            ? origSource.state.rect.x
+            : origSource.state.rect.x + origSource.state.rect.width,
           origSource.state.rect.y +
             origSource.state.rect.height +
             lineWidth(origSource) / 2,
         ];
         const target: [number, number] = [
-          origTarget.state.rect.x,
+          isLeft
+            ? origTarget.state.rect.x + origTarget.state.rect.width
+            : origTarget.state.rect.x,
           origTarget.state.rect.y +
             origTarget.state.rect.height +
             lineWidth(origTarget) / 2,

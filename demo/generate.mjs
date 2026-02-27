@@ -46,6 +46,9 @@ const d3Bundle = await readFile(d3MinPath, 'utf8');
 const { Transformer } = await import(
   join(root, 'packages/markmap-lib/dist/index.js')
 );
+const { deriveOptions } = await import(
+  join(root, 'packages/markmap-view/dist/index.js')
+);
 const transformer = new Transformer();
 
 // Resolve input/output paths from optional CLI arguments.
@@ -64,6 +67,12 @@ if (!existsSync(inputPath)) {
 const markdown = await readFile(inputPath, 'utf8');
 const { root: sampleData, frontmatter } = transformer.transform(markdown);
 const markmapOptions = frontmatter?.markmap ?? {};
+
+// Generate derived options and extract any custom CSS for fonts
+const derivedOptions = deriveOptions(markmapOptions);
+const customFontCSS = derivedOptions.style
+  ? derivedOptions.style('markmap')
+  : '';
 
 const html = `<!doctype html>
 <html>
@@ -127,6 +136,7 @@ button:hover { background: #e4e4e7; }
   padding: 8px;
 }
 #close-svg { align-self: flex-end; }
+${customFontCSS ? `/* Font styles from frontmatter */\n${customFontCSS}` : ''}
 </style>
 </head>
 <body>

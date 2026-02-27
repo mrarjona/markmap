@@ -1,5 +1,8 @@
 ---
 markmap:
+  fontFamily: 'Libertine, serif'
+  fontSize: 16
+  fontWeight: 400
   lineWidth: 2.5
   spacingVertical: 3
   spacingHorizontal: 30

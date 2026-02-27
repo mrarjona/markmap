@@ -6,12 +6,17 @@
   --markmap-code-color: #555;
   --markmap-highlight-bg: #ffeaa7;
   --markmap-table-border: 1px solid currentColor;
-  --markmap-font: 300 16px/20px sans-serif;
+  --markmap-font-family: sans-serif;
+  --markmap-font-size: 16px;
+  --markmap-font-weight: 300;
   --markmap-circle-open-bg: #fff;
   --markmap-text-color: #333;
   --markmap-highlight-node-bg: #ff02;
 
-  font: var(--markmap-font);
+  font-family: var(--markmap-font-family);
+  font-size: var(--markmap-font-size);
+  font-weight: var(--markmap-font-weight);
+  line-height: 1.25;
   color: var(--markmap-text-color);
 
   &-link {

@@ -57,6 +57,30 @@ export function deriveOptions(jsonOptions?: Partial<IMarkmapJSONOptions>) {
     if (value != null) derivedOptions[key] = !!value;
   });
 
+  const { fontFamily, fontSize, fontWeight } = options;
+  if (fontFamily != null || fontSize != null || fontWeight != null) {
+    derivedOptions.style = (id: string) => {
+      const lines: string[] = [];
+      if (fontFamily != null && /^[^;{}\\]+$/.test(String(fontFamily))) {
+        lines.push(`--markmap-font-family: ${fontFamily};`);
+      }
+      if (fontSize != null) {
+        const v = typeof fontSize === 'number' ? `${fontSize}px` : fontSize;
+        if (/^\d+(\.\d+)?(px|em|rem|%|vw|vh|pt|ch|ex)$/.test(String(v))) {
+          lines.push(`--markmap-font-size: ${v};`);
+        }
+      }
+      if (
+        fontWeight != null &&
+        (/^\d{1,4}$/.test(String(fontWeight)) ||
+          /^(normal|bold|lighter|bolder)$/.test(String(fontWeight)))
+      ) {
+        lines.push(`--markmap-font-weight: ${fontWeight};`);
+      }
+      return `.${id} { ${lines.join(' ')} }`;
+    };
+  }
+
   return derivedOptions;
 }
 

@@ -32,6 +32,9 @@ export interface IMarkmapJSONOptions {
   spacingVertical: number;
   zoom: boolean;
   lineWidth: number | number[];
+  fontFamily: string;
+  fontSize: number | string;
+  fontWeight: number | string;
 }
 
 export interface IMarkmapOptions {

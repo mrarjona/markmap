@@ -74,6 +74,9 @@ markmap:
    - "#797979"
    - "#d65f5f"
    - "#956cb4"
+  fontFamily: "Georgia, serif"
+  fontSize: 18
+  fontWeight: 400
 ---
 
 # Root node
@@ -99,6 +102,9 @@ Supported frontmatter options (all optional):
 | `maxWidth` | `number` | Maximum node label width (px) |
 | `zoom` | `boolean` | Enable/disable zoom |
 | `pan` | `boolean` | Enable/disable pan |
+| `fontFamily` | `string` | Font family for node labels (e.g. `"Georgia, serif"`) |
+| `fontSize` | `number \| string` | Font size – plain number is treated as `px` (e.g. `18`), or pass a CSS value like `"1.2rem"` |
+| `fontWeight` | `number \| string` | Font weight (e.g. `400`, `700`, or `"bold"`) |
 
 ---
 

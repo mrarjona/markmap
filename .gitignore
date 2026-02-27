@@ -7,4 +7,5 @@ packages/*/dist
 packages/*/coverage
 packages/*/types
 *.tsbuildinfo
-/demo/mindmap.png
+
+**/.DS_Store

@@ -61,6 +61,7 @@ if (!existsSync(htmlPath)) {
 // ---------------------------------------------------------------------------
 const CHROMIUM_CANDIDATES = [
   process.env.CHROME_PATH,
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/usr/bin/google-chrome',
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
@@ -100,7 +101,9 @@ try {
   ]);
 
   // Load the self-contained HTML (all JS/CSS inlined, no network needed).
-  await page.goto(pathToFileURL(htmlPath).href, { waitUntil: 'domcontentloaded' });
+  await page.goto(pathToFileURL(htmlPath).href, {
+    waitUntil: 'domcontentloaded',
+  });
 
   // Wait until at least one markmap node has been painted.
   await page.waitForFunction(
@@ -163,7 +166,9 @@ try {
 
   const physW = Math.round(bbox.width * SCALE);
   const physH = Math.round(bbox.height * SCALE);
-  console.log(`PNG written to ${pngPath}  (${physW}×${physH} px, ${SCALE}× DPI scale)`);
+  console.log(
+    `PNG written to ${pngPath}  (${physW}×${physH} px, ${SCALE}× DPI scale)`,
+  );
 } finally {
   await browser.close();
 }

@@ -252,21 +252,46 @@ export class Markmap {
     // The root node is not in leftSet and keeps side='right' (neutral center).
     const firstLevelChildren = tree.children || [];
     const leftCount = Math.floor(firstLevelChildren.length / 2);
+    const leftChildren = firstLevelChildren.slice(0, leftCount);
+    const rightChildren = firstLevelChildren.slice(leftCount);
     const leftSet = new Set<INode>();
-    firstLevelChildren.slice(0, leftCount).forEach((fnode) => {
+    leftChildren.forEach((fnode) => {
       fnode.each((n) => leftSet.add(n.data));
     });
+
+    // Re-center each side's subtree around the root's vertical position so
+    // that the left and right branches are symmetrically aligned with the root
+    // rather than being laid out as the top-half and bottom-half of one unified
+    // top-down tree (which is what flextree produces by default).
+    const rootX = tree.x;
+    let leftShift = 0;
+    let rightShift = 0;
+    const leftFnodes = leftChildren.flatMap((fc) => fc.descendants());
+    if (leftFnodes.length > 0) {
+      const leftTop = min(leftFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+      const leftBottom = max(leftFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+      leftShift = rootX - (leftTop + leftBottom) / 2;
+    }
+    const rightFnodes = rightChildren.flatMap((fc) => fc.descendants());
+    if (rightFnodes.length > 0) {
+      const rightTop = min(rightFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+      const rightBottom = max(rightFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+      rightShift = rootX - (rightTop + rightBottom) / 2;
+    }
 
     const rootWidth = tree.ySize - spacingHorizontal;
     fnodes.forEach((fnode) => {
       const node = fnode.data;
       const isLeft = leftSet.has(node);
       node.state.side = isLeft ? 'left' : 'right';
+      // Apply the per-side vertical shift: root gets no shift, left/right groups
+      // are independently re-centered around the root's vertical position.
+      const yShift = fnode === tree ? 0 : isLeft ? leftShift : rightShift;
       node.state.rect = {
         x: isLeft
           ? rootWidth - fnode.y - fnode.ySize + spacingHorizontal
           : fnode.y,
-        y: fnode.x - fnode.xSize / 2,
+        y: fnode.x - fnode.xSize / 2 + yShift,
         width: fnode.ySize - spacingHorizontal,
         height: fnode.xSize,
       };

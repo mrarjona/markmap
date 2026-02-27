@@ -1181,18 +1181,36 @@ button:hover { background: #e4e4e7; }
       const fnodes = tree.descendants();
       const firstLevelChildren = tree.children || [];
       const leftCount = Math.floor(firstLevelChildren.length / 2);
+      const leftChildren = firstLevelChildren.slice(0, leftCount);
+      const rightChildren = firstLevelChildren.slice(leftCount);
       const leftSet = /* @__PURE__ */ new Set();
-      firstLevelChildren.slice(0, leftCount).forEach((fnode) => {
+      leftChildren.forEach((fnode) => {
         fnode.each((n) => leftSet.add(n.data));
       });
+      const rootX = tree.x;
+      let leftShift = 0;
+      let rightShift = 0;
+      const leftFnodes = leftChildren.flatMap((fc) => fc.descendants());
+      if (leftFnodes.length > 0) {
+        const leftTop = d32.min(leftFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+        const leftBottom = d32.max(leftFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+        leftShift = rootX - (leftTop + leftBottom) / 2;
+      }
+      const rightFnodes = rightChildren.flatMap((fc) => fc.descendants());
+      if (rightFnodes.length > 0) {
+        const rightTop = d32.min(rightFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+        const rightBottom = d32.max(rightFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+        rightShift = rootX - (rightTop + rightBottom) / 2;
+      }
       const rootWidth = tree.ySize - spacingHorizontal;
       fnodes.forEach((fnode) => {
         const node = fnode.data;
         const isLeft = leftSet.has(node);
         node.state.side = isLeft ? "left" : "right";
+        const yShift = fnode === tree ? 0 : isLeft ? leftShift : rightShift;
         node.state.rect = {
           x: isLeft ? rootWidth - fnode.y - fnode.ySize + spacingHorizontal : fnode.y,
-          y: fnode.x - fnode.xSize / 2,
+          y: fnode.x - fnode.xSize / 2 + yShift,
           width: fnode.ySize - spacingHorizontal,
           height: fnode.xSize
         };

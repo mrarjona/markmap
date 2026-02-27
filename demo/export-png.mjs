@@ -93,6 +93,12 @@ try {
     deviceScaleFactor: SCALE,
   });
 
+  // Force light colour scheme so the export always has dark text on a white
+  // background, regardless of the OS/system dark-mode preference.
+  await page.emulateMediaFeatures([
+    { name: 'prefers-color-scheme', value: 'light' },
+  ]);
+
   // Load the self-contained HTML (all JS/CSS inlined, no network needed).
   await page.goto(pathToFileURL(htmlPath).href, { waitUntil: 'domcontentloaded' });
 

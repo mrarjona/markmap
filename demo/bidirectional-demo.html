@@ -68,8 +68,8 @@ button:hover { background: #e4e4e7; }
   <button id="btn-fit">Fit</button>
   <button id="btn-get-svg">Get SVG</button>
   <span style="color:#71717a;font-size:12px">
-    🔵 = left side &nbsp; 🟢 = right side &nbsp;
-    (first ⌊n/2⌋ children go left, rest go right)
+    Assessment &amp; Classification → left &nbsp;|&nbsp; Detection → right
+    (first ⌈n/2⌉ children go left, rest go right)
   </span>
 </div>
 <svg id="mindmap"></svg>
@@ -1228,7 +1228,7 @@ button:hover { background: #e4e4e7; }
       layout(tree);
       const fnodes = tree.descendants();
       const firstLevelChildren = tree.children || [];
-      const leftCount = Math.floor(firstLevelChildren.length / 2);
+      const leftCount = Math.ceil(firstLevelChildren.length / 2);
       const leftChildren = firstLevelChildren.slice(0, leftCount);
       const rightChildren = firstLevelChildren.slice(leftCount);
       const leftSet = /* @__PURE__ */ new Set();
@@ -1371,9 +1371,7 @@ button:hover { background: #e4e4e7; }
       );
       const mmLineEnter = mmLine.enter().append("line").attr("stroke", (d) => color(d)).attr("stroke-width", 0);
       const mmLineMerge = mmLine.merge(mmLineEnter);
-      const mmCircle = mmGMerge.selectAll(
-        childSelector("circle")
-      ).data(
+      const mmCircle = mmGMerge.selectAll(childSelector("circle")).data(
         (d) => {
           var _a;
           if (!((_a = d.children) == null ? void 0 : _a.length)) return [];
@@ -1383,9 +1381,7 @@ button:hover { background: #e4e4e7; }
               { node: d, side: "right" }
             ];
           }
-          return [
-            { node: d, side: d.state.side ?? "right" }
-          ];
+          return [{ node: d, side: d.state.side ?? "right" }];
         },
         (d) => d.node.state.key + (this._isBidirectionalRoot(d.node) ? `-${d.side}` : "")
       );
@@ -1655,81 +1651,253 @@ button:hover { background: #e4e4e7; }
 (function () {
   const { Markmap, deriveOptions } = window.markmap;
 
-  // Sample data tree (IPureNode) – built into this file at generation time.
+  // Tree data and options parsed from markdown frontmatter at build time.
   const data = {
-  "content": "<strong>Bidirectional Layout Demo</strong>",
+  "content": "Main contributions (44)",
   "children": [
     {
-      "content": "🔵 Left Topic 1",
+      "content": "Assessment (5)",
       "children": [
         {
-          "content": "Sub-left 1.1",
-          "children": []
+          "content": "Code reviews (3)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "15,16"
+          }
         },
         {
-          "content": "Sub-left 1.2",
-          "children": []
-        }
-      ]
-    },
-    {
-      "content": "🔵 Left Topic 2",
-      "children": [
-        {
-          "content": "Sub-left 2.1",
-          "children": []
+          "content": "Textual data (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "16,17"
+          }
         },
         {
-          "content": "Sub-left 2.2",
-          "children": [
-            {
-              "content": "Deep left child",
-              "children": []
-            }
-          ]
+          "content": "Requirements coverage (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "17,18"
+          }
         }
-      ]
+      ],
+      "payload": {
+        "tag": "h2",
+        "lines": "14,15"
+      }
     },
     {
-      "content": "🟢 Right Topic 1",
+      "content": "Classification (25)",
       "children": [
         {
-          "content": "Sub-right 1.1",
-          "children": []
+          "content": "Issues (11)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "19,20"
+          }
         },
         {
-          "content": "Sub-right 1.2",
-          "children": []
-        }
-      ]
-    },
-    {
-      "content": "🟢 Right Topic 2",
-      "children": [
-        {
-          "content": "Sub-right 2.1",
-          "children": []
+          "content": "Sentiments (5)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "20,21"
+          }
         },
         {
-          "content": "Sub-right 2.2",
-          "children": [
-            {
-              "content": "Deep right child",
-              "children": []
-            }
-          ]
+          "content": "Commits (2)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "21,22"
+          }
+        },
+        {
+          "content": "Self-admitted technical debt (2)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "22,23"
+          }
+        },
+        {
+          "content": "Stack Overflow posts (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "23,24"
+          }
+        },
+        {
+          "content": "Code reviews (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "24,25"
+          }
+        },
+        {
+          "content": "Video frames (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "25,26"
+          }
+        },
+        {
+          "content": "Code review comments (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "26,27"
+          }
+        },
+        {
+          "content": "Dockerfiles (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "27,28"
+          }
         }
-      ]
+      ],
+      "payload": {
+        "tag": "h2",
+        "lines": "18,19"
+      }
     },
     {
-      "content": "🟢 Right Topic 3",
+      "content": "Detection (14)",
       "children": [
         {
-          "content": "Sub-right 3.1",
-          "children": []
+          "content": "Uncivil comments (2)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "29,30"
+          }
+        },
+        {
+          "content": "Incident root causes (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "30,31"
+          }
+        },
+        {
+          "content": "Topics (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "31,32"
+          }
+        },
+        {
+          "content": "Toxicity (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "32,33"
+          }
+        },
+        {
+          "content": "Offensive language (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "33,34"
+          }
+        },
+        {
+          "content": "Confusion comments (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "34,35"
+          }
+        },
+        {
+          "content": "Noisy comments (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "35,36"
+          }
+        },
+        {
+          "content": "Self-admitted technical debt (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "36,37"
+          }
+        },
+        {
+          "content": "Code smells (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "37,38"
+          }
+        },
+        {
+          "content": "Software failure news (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "38,39"
+          }
+        },
+        {
+          "content": "Highly detailed news (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "39,40"
+          }
+        },
+        {
+          "content": "Duplicated software incidents (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "40,41"
+          }
+        },
+        {
+          "content": "Ponzi contracts (1)",
+          "children": [],
+          "payload": {
+            "tag": "li",
+            "lines": "41,42"
+          }
         }
-      ]
+      ],
+      "payload": {
+        "tag": "h2",
+        "lines": "28,29"
+      }
     }
+  ],
+  "payload": {
+    "tag": "h1",
+    "lines": "13,14"
+  }
+};
+  const options = {
+  "lineWidth": 2.5,
+  "spacingVertical": 3,
+  "spacingHorizontal": 30,
+  "colorFreezeLevel": 2,
+  "color": [
+    "black",
+    "#797979",
+    "#d65f5f",
+    "#956cb4"
   ]
 };
 
@@ -1738,8 +1906,8 @@ button:hover { background: #e4e4e7; }
     document.documentElement.classList.add('markmap-dark');
   }
 
-  // Create the markmap.
-  const mm = Markmap.create('svg#mindmap', deriveOptions({}), data);
+  // Create the markmap using options derived from the markdown frontmatter.
+  const mm = Markmap.create('svg#mindmap', deriveOptions(options), data);
 
   // Fit button.
   document.getElementById('btn-fit').addEventListener('click', () => mm.fit());

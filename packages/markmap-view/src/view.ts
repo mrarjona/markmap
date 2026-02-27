@@ -307,11 +307,11 @@ export class Markmap {
     const fnodes = tree.descendants();
 
     // Determine which first-level nodes go to the left side.
-    // The first half (Math.floor(n/2)) go left; the rest go right.
-    // For odd counts, the extra child goes to the right side.
+    // Math.ceil(n/2) go left; the rest go right.
+    // For odd counts, the extra child goes to the left side.
     // The root node is not in leftSet and keeps side='right' (neutral center).
     const firstLevelChildren = tree.children || [];
-    const leftCount = Math.floor(firstLevelChildren.length / 2);
+    const leftCount = Math.ceil(firstLevelChildren.length / 2);
     const leftChildren = firstLevelChildren.slice(0, leftCount);
     const rightChildren = firstLevelChildren.slice(leftCount);
     const leftSet = new Set<INode>();

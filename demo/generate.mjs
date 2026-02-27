@@ -13,6 +13,8 @@
 import { readFile, writeFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join, resolve } from 'path';
+import { createRequire } from 'module';
+import { existsSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -26,8 +28,6 @@ const markmapViewBundle = await readFile(
 // Read D3 from local node_modules so the demo works without internet access.
 // Resolve via the markmap-view package context so we always use the same D3
 // version that the library was built against, regardless of pnpm store layout.
-import { createRequire } from 'module';
-import { existsSync } from 'fs';
 const _require = createRequire(
   join(root, 'packages/markmap-view/src/index.ts'),
 );
@@ -38,51 +38,60 @@ if (!existsSync(d3MinPath)) {
 }
 const d3Bundle = await readFile(d3MinPath, 'utf8');
 
-// Sample tree data (IPureNode format) that clearly shows the bidirectional layout.
-// With 5 first-level children: Math.floor(5/2)=2 go LEFT, the remaining 3 go RIGHT.
-const sampleData = {
-  content: '<strong>Bidirectional Layout Demo</strong>',
-  children: [
-    {
-      content: '🔵 Left Topic 1',
-      children: [
-        { content: 'Sub-left 1.1', children: [] },
-        { content: 'Sub-left 1.2', children: [] },
-      ],
-    },
-    {
-      content: '🔵 Left Topic 2',
-      children: [
-        { content: 'Sub-left 2.1', children: [] },
-        {
-          content: 'Sub-left 2.2',
-          children: [{ content: 'Deep left child', children: [] }],
-        },
-      ],
-    },
-    {
-      content: '🟢 Right Topic 1',
-      children: [
-        { content: 'Sub-right 1.1', children: [] },
-        { content: 'Sub-right 1.2', children: [] },
-      ],
-    },
-    {
-      content: '🟢 Right Topic 2',
-      children: [
-        { content: 'Sub-right 2.1', children: [] },
-        {
-          content: 'Sub-right 2.2',
-          children: [{ content: 'Deep right child', children: [] }],
-        },
-      ],
-    },
-    {
-      content: '🟢 Right Topic 3',
-      children: [{ content: 'Sub-right 3.1', children: [] }],
-    },
-  ],
-};
+// Parse the research markdown (with frontmatter) using markmap-lib Transformer
+// so the tree data and markmap options come directly from the source markdown.
+const { Transformer } = await import(
+  join(root, 'packages/markmap-lib/dist/index.js')
+);
+const transformer = new Transformer();
+
+const markdown = `\
+---
+markmap:
+  lineWidth: 2.5
+  spacingVertical: 3
+  spacingHorizontal: 30
+  colorFreezeLevel: 2
+  color:
+   - black
+   - "#797979"
+   - "#d65f5f"
+   - "#956cb4"
+---
+
+# Main contributions (44)
+## Assessment (5)
+- Code reviews (3)
+- Textual data (1)
+- Requirements coverage (1)
+## Classification (25)
+- Issues (11)
+- Sentiments (5)
+- Commits (2)
+- Self-admitted technical debt (2)
+- Stack Overflow posts (1)
+- Code reviews (1)
+- Video frames (1)
+- Code review comments (1)
+- Dockerfiles (1)
+## Detection (14)
+- Uncivil comments (2)
+- Incident root causes (1)
+- Topics (1)
+- Toxicity (1)
+- Offensive language (1)
+- Confusion comments (1)
+- Noisy comments (1)
+- Self-admitted technical debt (1)
+- Code smells (1)
+- Software failure news (1)
+- Highly detailed news (1)
+- Duplicated software incidents (1)
+- Ponzi contracts (1)
+`;
+
+const { root: sampleData, frontmatter } = transformer.transform(markdown);
+const markmapOptions = frontmatter?.markmap ?? {};
 
 const html = `<!doctype html>
 <html>
@@ -154,8 +163,8 @@ button:hover { background: #e4e4e7; }
   <button id="btn-fit">Fit</button>
   <button id="btn-get-svg">Get SVG</button>
   <span style="color:#71717a;font-size:12px">
-    🔵 = left side &nbsp; 🟢 = right side &nbsp;
-    (first ⌊n/2⌋ children go left, rest go right)
+    Assessment &amp; Classification → left &nbsp;|&nbsp; Detection → right
+    (first ⌈n/2⌉ children go left, rest go right)
   </span>
 </div>
 <svg id="mindmap"></svg>
@@ -186,16 +195,17 @@ ${markmapViewBundle}
 (function () {
   const { Markmap, deriveOptions } = window.markmap;
 
-  // Sample data tree (IPureNode) – built into this file at generation time.
+  // Tree data and options parsed from markdown frontmatter at build time.
   const data = ${JSON.stringify(sampleData, null, 2)};
+  const options = ${JSON.stringify(markmapOptions, null, 2)};
 
   // Prefer dark mode if the OS is set to it.
   if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
     document.documentElement.classList.add('markmap-dark');
   }
 
-  // Create the markmap.
-  const mm = Markmap.create('svg#mindmap', deriveOptions({}), data);
+  // Create the markmap using options derived from the markdown frontmatter.
+  const mm = Markmap.create('svg#mindmap', deriveOptions(options), data);
 
   // Fit button.
   document.getElementById('btn-fit').addEventListener('click', () => mm.fit());

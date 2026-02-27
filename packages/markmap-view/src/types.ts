@@ -35,6 +35,7 @@ export interface IMarkmapJSONOptions {
   fontFamily: string;
   fontSize: number | string;
   fontWeight: number | string;
+  rootNodeBold: boolean;
 }
 
 export interface IMarkmapOptions {
@@ -59,6 +60,7 @@ export interface IMarkmapOptions {
   paddingX: number;
   spacingHorizontal: number;
   spacingVertical: number;
+  rootNodeBold: boolean;
 }
 
 export interface IPadding {

@@ -447,7 +447,8 @@ button:hover { background: #e4e4e7; }
     nodeMinHeight: 16,
     paddingX: 8,
     spacingHorizontal: 80,
-    spacingVertical: 5
+    spacingVertical: 5,
+    rootNodeBold: false
   };
   function deriveOptions(jsonOptions) {
     const derivedOptions = {};
@@ -494,7 +495,7 @@ button:hover { background: #e4e4e7; }
       const value = options[key];
       if (typeof value === "number") derivedOptions[key] = value;
     });
-    const booleanKeys = ["zoom", "pan"];
+    const booleanKeys = ["zoom", "pan", "rootNodeBold"];
     booleanKeys.forEach((key) => {
       const value = options[key];
       if (value != null) derivedOptions[key] = !!value;
@@ -1047,7 +1048,7 @@ button:hover { background: #e4e4e7; }
       next: lastLows
     };
   };
-  const css = ".markmap {\n  --markmap-max-width: 9999px;\n  --markmap-a-color: #0097e6;\n  --markmap-a-hover-color: #00a8ff;\n  --markmap-code-bg: #f0f0f0;\n  --markmap-code-color: #555;\n  --markmap-highlight-bg: #ffeaa7;\n  --markmap-table-border: 1px solid currentColor;\n  --markmap-font-family: sans-serif;\n  --markmap-font-size: 16px;\n  --markmap-font-weight: 300;\n  --markmap-circle-open-bg: #fff;\n  --markmap-text-color: #333;\n  --markmap-highlight-node-bg: #ff02;\n\n  font-family: var(--markmap-font-family);\n  font-size: var(--markmap-font-size);\n  font-weight: var(--markmap-font-weight);\n  line-height: 1.25;\n  color: var(--markmap-text-color);\n}\n\n  .markmap-link {\n    fill: none;\n  }\n\n  .markmap-node > circle {\n      cursor: pointer;\n    }\n\n  .markmap-foreign {\n    display: inline-block;\n  }\n\n  .markmap-foreign p {\n      margin: 0;\n    }\n\n  .markmap-foreign a {\n      color: var(--markmap-a-color);\n    }\n\n  .markmap-foreign a:hover {\n        color: var(--markmap-a-hover-color);\n      }\n\n  .markmap-foreign code {\n      padding: 0.25em;\n      font-size: calc(1em - 2px);\n      color: var(--markmap-code-color);\n      background-color: var(--markmap-code-bg);\n      border-radius: 2px;\n    }\n\n  .markmap-foreign pre {\n      margin: 0;\n    }\n\n  .markmap-foreign pre > code {\n        display: block;\n      }\n\n  .markmap-foreign del {\n      text-decoration: line-through;\n    }\n\n  .markmap-foreign em {\n      font-style: italic;\n    }\n\n  .markmap-foreign strong {\n      font-weight: bold;\n    }\n\n  .markmap-foreign mark {\n      background: var(--markmap-highlight-bg);\n    }\n\n  .markmap-foreign table,\n    .markmap-foreign th,\n    .markmap-foreign td {\n      border-collapse: collapse;\n      border: var(--markmap-table-border);\n    }\n\n  .markmap-foreign img {\n      display: inline-block;\n    }\n\n  .markmap-foreign svg {\n      fill: currentColor;\n    }\n\n  .markmap-foreign > div {\n      width: var(--markmap-max-width);\n      text-align: left;\n    }\n\n  .markmap-foreign > div > div {\n        display: inline-block;\n      }\n\n  .markmap-highlight rect {\n    fill: var(--markmap-highlight-node-bg);\n  }\n\n.markmap-dark .markmap {\n  --markmap-code-bg: #1a1b26;\n  --markmap-code-color: #ddd;\n  --markmap-circle-open-bg: #444;\n  --markmap-text-color: #eee;\n}\n";
+  const css = ".markmap {\n  --markmap-max-width: 9999px;\n  --markmap-a-color: #0097e6;\n  --markmap-a-hover-color: #00a8ff;\n  --markmap-code-bg: #f0f0f0;\n  --markmap-code-color: #555;\n  --markmap-highlight-bg: #ffeaa7;\n  --markmap-table-border: 1px solid currentColor;\n  --markmap-font-family: sans-serif;\n  --markmap-font-size: 16px;\n  --markmap-font-weight: 300;\n  --markmap-circle-open-bg: #fff;\n  --markmap-text-color: #333;\n  --markmap-highlight-node-bg: #ff02;\n\n  font-family: var(--markmap-font-family);\n  font-size: var(--markmap-font-size);\n  font-weight: var(--markmap-font-weight);\n  line-height: 1.25;\n  color: var(--markmap-text-color);\n}\n\n  .markmap-link {\n    fill: none;\n  }\n\n  .markmap-node > circle {\n      cursor: pointer;\n    }\n\n  .markmap-foreign {\n    display: inline-block;\n  }\n\n  .markmap-foreign p {\n      margin: 0;\n    }\n\n  .markmap-foreign a {\n      color: var(--markmap-a-color);\n    }\n\n  .markmap-foreign a:hover {\n        color: var(--markmap-a-hover-color);\n      }\n\n  .markmap-foreign code {\n      padding: 0.25em;\n      font-size: calc(1em - 2px);\n      color: var(--markmap-code-color);\n      background-color: var(--markmap-code-bg);\n      border-radius: 2px;\n    }\n\n  .markmap-foreign pre {\n      margin: 0;\n    }\n\n  .markmap-foreign pre > code {\n        display: block;\n      }\n\n  .markmap-foreign del {\n      text-decoration: line-through;\n    }\n\n  .markmap-foreign em {\n      font-style: italic;\n    }\n\n  .markmap-foreign strong {\n      font-weight: bold;\n    }\n\n  .markmap-foreign mark {\n      background: var(--markmap-highlight-bg);\n    }\n\n  .markmap-foreign table,\n    .markmap-foreign th,\n    .markmap-foreign td {\n      border-collapse: collapse;\n      border: var(--markmap-table-border);\n    }\n\n  .markmap-foreign img {\n      display: inline-block;\n    }\n\n  .markmap-foreign svg {\n      fill: currentColor;\n    }\n\n  .markmap-foreign > div {\n      width: var(--markmap-max-width);\n      text-align: left;\n    }\n\n  .markmap-foreign > div > div {\n        display: inline-block;\n      }\n\n  .markmap-foreign-root-bold > div > div {\n      font-weight: bold;\n    }\n\n  .markmap-highlight rect {\n    fill: var(--markmap-highlight-node-bg);\n  }\n\n.markmap-dark .markmap {\n  --markmap-code-bg: #1a1b26;\n  --markmap-code-color: #ddd;\n  --markmap-circle-open-bg: #444;\n  --markmap-text-color: #eee;\n}\n";
   const globalCSS = css;
   const SELECTOR_NODE = "g.markmap-node";
   const SELECTOR_LINK = "path.markmap-link";
@@ -1417,7 +1418,13 @@ button:hover { background: #e4e4e7; }
         (d) => [d],
         (d) => d.state.key
       );
-      const mmFoEnter = mmFo.enter().append("foreignObject").attr("class", "markmap-foreign").attr("x", paddingX).attr("y", 0).style("opacity", 0).on("mousedown", stopPropagation).on("dblclick", stopPropagation);
+      const mmFoEnter = mmFo.enter().append("foreignObject").attr("class", (d) => {
+        const classes = ["markmap-foreign"];
+        if (d.state.depth === 1 && this.options.rootNodeBold) {
+          classes.push("markmap-foreign-root-bold");
+        }
+        return classes.join(" ");
+      }).attr("x", paddingX).attr("y", 0).style("opacity", 0).on("mousedown", stopPropagation).on("dblclick", stopPropagation);
       mmFoEnter.append("xhtml:div").append("xhtml:div").html((d) => d.content).attr("xmlns", "http://www.w3.org/1999/xhtml");
       mmFoEnter.each(function() {
         var _a;
@@ -1688,7 +1695,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "22,23"
+            "lines": "23,24"
           }
         },
         {
@@ -1696,13 +1703,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "23,24"
+            "lines": "24,25"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "21,22"
+        "lines": "22,23"
       }
     },
     {
@@ -1713,7 +1720,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "25,26"
+            "lines": "26,27"
           }
         },
         {
@@ -1721,7 +1728,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "26,27"
+            "lines": "27,28"
           }
         },
         {
@@ -1729,7 +1736,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "27,28"
+            "lines": "28,29"
           }
         },
         {
@@ -1737,7 +1744,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "28,29"
+            "lines": "29,30"
           }
         },
         {
@@ -1745,13 +1752,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "29,30"
+            "lines": "30,31"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "24,25"
+        "lines": "25,26"
       }
     },
     {
@@ -1762,7 +1769,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "31,32"
+            "lines": "32,33"
           }
         },
         {
@@ -1770,7 +1777,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "32,33"
+            "lines": "33,34"
           }
         },
         {
@@ -1778,7 +1785,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "33,34"
+            "lines": "34,35"
           }
         },
         {
@@ -1786,7 +1793,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "34,35"
+            "lines": "35,36"
           }
         },
         {
@@ -1794,7 +1801,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "35,36"
+            "lines": "36,37"
           }
         },
         {
@@ -1802,7 +1809,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "36,37"
+            "lines": "37,38"
           }
         },
         {
@@ -1810,7 +1817,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "37,38"
+            "lines": "38,39"
           }
         },
         {
@@ -1818,13 +1825,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "38,39"
+            "lines": "39,40"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "30,31"
+        "lines": "31,32"
       }
     },
     {
@@ -1835,7 +1842,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "40,41"
+            "lines": "41,42"
           }
         },
         {
@@ -1843,7 +1850,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "41,42"
+            "lines": "42,43"
           }
         },
         {
@@ -1851,7 +1858,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "42,43"
+            "lines": "43,44"
           }
         },
         {
@@ -1859,13 +1866,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "43,44"
+            "lines": "44,45"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "39,40"
+        "lines": "40,41"
       }
     },
     {
@@ -1876,7 +1883,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "45,46"
+            "lines": "46,47"
           }
         },
         {
@@ -1884,7 +1891,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "46,47"
+            "lines": "47,48"
           }
         },
         {
@@ -1892,7 +1899,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "47,48"
+            "lines": "48,49"
           }
         },
         {
@@ -1900,7 +1907,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "48,49"
+            "lines": "49,50"
           }
         },
         {
@@ -1908,13 +1915,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "49,50"
+            "lines": "50,51"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "44,45"
+        "lines": "45,46"
       }
     },
     {
@@ -1925,7 +1932,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "51,52"
+            "lines": "52,53"
           }
         },
         {
@@ -1933,7 +1940,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "52,53"
+            "lines": "53,54"
           }
         },
         {
@@ -1941,7 +1948,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "53,54"
+            "lines": "54,55"
           }
         },
         {
@@ -1949,7 +1956,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "54,55"
+            "lines": "55,56"
           }
         },
         {
@@ -1957,7 +1964,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "55,56"
+            "lines": "56,57"
           }
         },
         {
@@ -1965,7 +1972,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "56,57"
+            "lines": "57,58"
           }
         },
         {
@@ -1973,7 +1980,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "57,58"
+            "lines": "58,59"
           }
         },
         {
@@ -1981,7 +1988,7 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "58,59"
+            "lines": "59,60"
           }
         },
         {
@@ -1989,13 +1996,13 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "59,60"
+            "lines": "60,61"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "50,51"
+        "lines": "51,52"
       }
     },
     {
@@ -2006,25 +2013,26 @@ button:hover { background: #e4e4e7; }
           "children": [],
           "payload": {
             "tag": "li",
-            "lines": "61,62"
+            "lines": "62,63"
           }
         }
       ],
       "payload": {
         "tag": "h2",
-        "lines": "60,61"
+        "lines": "61,62"
       }
     }
   ],
   "payload": {
     "tag": "h1",
-    "lines": "20,21"
+    "lines": "21,22"
   }
 };
   const options = {
   "fontFamily": "Libertine, serif",
   "fontSize": 16,
   "fontWeight": 400,
+  "rootNodeBold": true,
   "lineWidth": 2.5,
   "spacingVertical": 3,
   "spacingHorizontal": 30,

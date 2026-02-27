@@ -98,6 +98,12 @@
     }
   }
 
+  &-foreign-root-bold {
+    > div > div {
+      font-weight: bold;
+    }
+  }
+
   &-highlight rect {
     fill: var(--markmap-highlight-node-bg);
   }

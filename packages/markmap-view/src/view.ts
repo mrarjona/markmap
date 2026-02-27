@@ -552,7 +552,13 @@ export class Markmap {
     const mmFoEnter = mmFo
       .enter()
       .append('foreignObject')
-      .attr('class', 'markmap-foreign')
+      .attr('class', (d) => {
+        const classes = ['markmap-foreign'];
+        if (d.state.depth === 1 && this.options.rootNodeBold) {
+          classes.push('markmap-foreign-root-bold');
+        }
+        return classes.join(' ');
+      })
       .attr('x', paddingX)
       .attr('y', 0)
       .style('opacity', 0)

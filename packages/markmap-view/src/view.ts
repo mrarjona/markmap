@@ -788,6 +788,15 @@ export class Markmap {
       .catch(noop);
   }
 
+  /**
+   * Return the D3-rendered SVG markup as a string.
+   */
+  getSVG(): string {
+    const node = this.svg.node();
+    if (!node) return '';
+    return new XMLSerializer().serializeToString(node);
+  }
+
   destroy() {
     this.svg.on('.zoom', null);
     this.svg.html(null);

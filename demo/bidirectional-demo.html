@@ -1058,6 +1058,11 @@ button:hover { background: #e4e4e7; }
         if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
         this.toggleNode(d, recursive);
       };
+      this.handleCircleClick = (e, d) => {
+        let recursive = this.options.toggleRecursively;
+        if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
+        this.toggleSide(d, recursive);
+      };
       this.ensureView = this.ensureVisible;
       this.svg = svg.datum ? svg : d32.select(svg);
       this.styleNode = this.svg.append("style");
@@ -1118,6 +1123,49 @@ button:hover { background: #e4e4e7; }
         };
       }
       await this.renderData(data);
+    }
+    async toggleSide({ node, side }, recursive = false) {
+      if (this._isBidirectionalRoot(node)) {
+        const sideChildren = (node.children || []).filter(
+          (c) => c.state.side === side
+        );
+        const allFolded = sideChildren.every((c) => {
+          var _a;
+          return !!((_a = c.payload) == null ? void 0 : _a.fold);
+        });
+        const fold = allFolded ? 0 : 1;
+        for (const child of sideChildren) {
+          if (recursive) {
+            walkTree(child, (item, next) => {
+              item.payload = { ...item.payload, fold };
+              next();
+            });
+          } else {
+            child.payload = { ...child.payload, fold };
+          }
+        }
+        await this.renderData(node);
+      } else {
+        await this.toggleNode(node, recursive);
+      }
+    }
+    _isBidirectionalRoot(node) {
+      var _a;
+      return node.state.depth === 1 && (((_a = node.children) == null ? void 0 : _a.length) ?? 0) >= 2;
+    }
+    _getCircleSide(d) {
+      return this._isBidirectionalRoot(d.node) ? d.side : d.node.state.side ?? "right";
+    }
+    _getSideFolded(node, side) {
+      var _a, _b, _c;
+      if (this._isBidirectionalRoot(node)) {
+        const sideChildren = ((_a = node.children) == null ? void 0 : _a.filter((c) => c.state.side === side)) || [];
+        return sideChildren.length > 0 && sideChildren.every((c) => {
+          var _a2;
+          return !!((_a2 = c.payload) == null ? void 0 : _a2.fold);
+        });
+      }
+      return !!((_b = node.payload) == null ? void 0 : _b.fold) && !!((_c = node.children) == null ? void 0 : _c.length);
     }
     _initializeData(node) {
       let nodeId = 0;
@@ -1323,21 +1371,26 @@ button:hover { background: #e4e4e7; }
       );
       const mmLineEnter = mmLine.enter().append("line").attr("stroke", (d) => color(d)).attr("stroke-width", 0);
       const mmLineMerge = mmLine.merge(mmLineEnter);
-      const mmCircle = mmGMerge.selectAll(childSelector("circle")).data(
+      const mmCircle = mmGMerge.selectAll(
+        childSelector("circle")
+      ).data(
         (d) => {
           var _a;
-          return ((_a = d.children) == null ? void 0 : _a.length) ? [d] : [];
+          if (!((_a = d.children) == null ? void 0 : _a.length)) return [];
+          if (this._isBidirectionalRoot(d)) {
+            return [
+              { node: d, side: "left" },
+              { node: d, side: "right" }
+            ];
+          }
+          return [
+            { node: d, side: d.state.side ?? "right" }
+          ];
         },
-        (d) => d.state.key
+        (d) => d.node.state.key + (this._isBidirectionalRoot(d.node) ? `-${d.side}` : "")
       );
-      const mmCircleEnter = mmCircle.enter().append("circle").attr("stroke-width", 0).attr("r", 0).on("click", (e, d) => this.handleClick(e, d)).on("mousedown", stopPropagation);
-      const mmCircleMerge = mmCircleEnter.merge(mmCircle).attr("stroke", (d) => color(d)).attr(
-        "fill",
-        (d) => {
-          var _a;
-          return ((_a = d.payload) == null ? void 0 : _a.fold) && d.children ? color(d) : "var(--markmap-circle-open-bg)";
-        }
-      );
+      const mmCircleEnter = mmCircle.enter().append("circle").attr("stroke-width", 0).attr("r", 0).on("click", (e, d) => this.handleCircleClick(e, d)).on("mousedown", stopPropagation);
+      const mmCircleMerge = mmCircleEnter.merge(mmCircle).attr("stroke", (d) => color(d.node));
       const observer = this._observer;
       const mmFo = mmGMerge.selectAll(childSelector("foreignObject")).data(
         (d) => [d],
@@ -1410,7 +1463,13 @@ button:hover { background: #e4e4e7; }
         childSelector("circle")
       );
       this.transition(mmCircleExit).attr("r", 0).attr("stroke-width", 0);
-      mmCircleMerge.attr("cx", (d) => d.state.side === "left" ? 0 : d.state.rect.width).attr("cy", (d) => d.state.rect.height + lineWidth(d) / 2);
+      mmCircleMerge.attr(
+        "cx",
+        (d) => this._getCircleSide(d) === "left" ? 0 : d.node.state.rect.width
+      ).attr("cy", (d) => d.node.state.rect.height + lineWidth(d.node) / 2).attr(
+        "fill",
+        (d) => this._getSideFolded(d.node, d.side) ? color(d.node) : "var(--markmap-circle-open-bg)"
+      );
       this.transition(mmCircleMerge).attr("r", 6).attr("stroke-width", "1.5");
       this.transition(mmFoExit).style("opacity", 0);
       mmFoMerge.attr("width", (d) => Math.max(0, d.state.rect.width - paddingX * 2)).attr("height", (d) => d.state.rect.height);

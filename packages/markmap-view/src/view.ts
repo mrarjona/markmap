@@ -32,6 +32,16 @@ import { childSelector, simpleHash } from './util';
 
 export const globalCSS = css;
 
+/**
+ * Data bound to each collapse/expand circle element.
+ * For the bidirectional root two circles are created (one per side);
+ * for all other nodes exactly one circle is created.
+ */
+interface ICircleData {
+  node: INode;
+  side: 'left' | 'right';
+}
+
 const SELECTOR_NODE = 'g.markmap-node';
 const SELECTOR_LINK = 'path.markmap-link';
 const SELECTOR_HIGHLIGHT = 'g.markmap-highlight';
@@ -164,6 +174,56 @@ export class Markmap {
     if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
     this.toggleNode(d, recursive);
   };
+
+  handleCircleClick = (e: MouseEvent, d: ICircleData) => {
+    let recursive = this.options.toggleRecursively;
+    if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
+    this.toggleSide(d, recursive);
+  };
+
+  async toggleSide({ node, side }: ICircleData, recursive = false) {
+    if (this._isBidirectionalRoot(node)) {
+      const sideChildren = (node.children || []).filter(
+        (c) => c.state.side === side,
+      );
+      const allFolded = sideChildren.every((c) => !!c.payload?.fold);
+      const fold = allFolded ? 0 : 1;
+      for (const child of sideChildren) {
+        if (recursive) {
+          walkTree(child, (item, next) => {
+            item.payload = { ...item.payload, fold };
+            next();
+          });
+        } else {
+          child.payload = { ...child.payload, fold };
+        }
+      }
+      await this.renderData(node);
+    } else {
+      await this.toggleNode(node, recursive);
+    }
+  }
+
+  private _isBidirectionalRoot(node: INode): boolean {
+    return node.state.depth === 1 && (node.children?.length ?? 0) >= 2;
+  }
+
+  private _getCircleSide(d: ICircleData): 'left' | 'right' {
+    return this._isBidirectionalRoot(d.node)
+      ? d.side
+      : (d.node.state.side ?? 'right');
+  }
+
+  private _getSideFolded(node: INode, side: 'left' | 'right'): boolean {
+    if (this._isBidirectionalRoot(node)) {
+      const sideChildren =
+        node.children?.filter((c) => c.state.side === side) || [];
+      return (
+        sideChildren.length > 0 && sideChildren.every((c) => !!c.payload?.fold)
+      );
+    }
+    return !!node.payload?.fold && !!node.children?.length;
+  }
 
   private _initializeData(node: IPureNode | INode) {
     let nodeId = 0;
@@ -446,31 +506,38 @@ export class Markmap {
       .attr('stroke-width', 0);
     const mmLineMerge = mmLine.merge(mmLineEnter);
 
-    // Circle to link to children of the node
+    // Circle to link to children of the node.
+    // For the bidirectional root, two circles are bound (one per side).
     const mmCircle = mmGMerge
       .selectAll<
         SVGCircleElement,
-        INode
+        ICircleData
       >(childSelector<SVGCircleElement>('circle'))
       .data(
-        (d) => (d.children?.length ? [d] : []),
-        (d) => d.state.key,
+        (d): ICircleData[] => {
+          if (!d.children?.length) return [];
+          if (this._isBidirectionalRoot(d)) {
+            return [
+              { node: d, side: 'left' },
+              { node: d, side: 'right' },
+            ];
+          }
+          return [{ node: d, side: d.state.side ?? 'right' }];
+        },
+        (d) =>
+          d.node.state.key +
+          (this._isBidirectionalRoot(d.node) ? `-${d.side}` : ''),
       );
     const mmCircleEnter = mmCircle
       .enter()
       .append('circle')
       .attr('stroke-width', 0)
       .attr('r', 0)
-      .on('click', (e, d) => this.handleClick(e, d))
+      .on('click', (e, d) => this.handleCircleClick(e, d))
       .on('mousedown', stopPropagation);
     const mmCircleMerge = mmCircleEnter
       .merge(mmCircle)
-      .attr('stroke', (d) => color(d))
-      .attr('fill', (d) =>
-        d.payload?.fold && d.children
-          ? color(d)
-          : 'var(--markmap-circle-open-bg)',
-      );
+      .attr('stroke', (d) => color(d.node));
 
     const observer = this._observer;
     const mmFo = mmGMerge
@@ -605,13 +672,20 @@ export class Markmap {
       .attr('stroke', (d) => color(d))
       .attr('stroke-width', lineWidth);
 
-    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, INode>(
+    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, ICircleData>(
       childSelector<SVGCircleElement>('circle'),
     );
     this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
     mmCircleMerge
-      .attr('cx', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
-      .attr('cy', (d) => d.state.rect.height + lineWidth(d) / 2);
+      .attr('cx', (d) =>
+        this._getCircleSide(d) === 'left' ? 0 : d.node.state.rect.width,
+      )
+      .attr('cy', (d) => d.node.state.rect.height + lineWidth(d.node) / 2)
+      .attr('fill', (d) =>
+        this._getSideFolded(d.node, d.side)
+          ? color(d.node)
+          : 'var(--markmap-circle-open-bg)',
+      );
     this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
 
     this.transition(mmFoExit).style('opacity', 0);

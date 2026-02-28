@@ -1,6 +1,6 @@
 ---
 markmap:
-  fontFamily: 'Libertine, serif'
+  fontFamily: 'sans-serif'
   fontSize: 16
   fontWeight: 400
   rootNodeBold: true

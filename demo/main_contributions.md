@@ -10,24 +10,23 @@ markmap:
   colorFreezeLevel: 2
   color:
    - black
-   - "#797979"
-   - "#d65f5f"
-   - "#956cb4"
    - "#dc7ec0"
+   - "#d65f5f"
+   - "#8c613c"
+   - "#797979"
    - "#ee854a"
    - "#6acc64"
    - "#4878d0"
-   - "#8c613c"
+   - "#956cb4"
 ---
 
-# Main contributions (87)
-## Assessment (5)
+# Main contributions (85)
+## Assessment (4)
 - Code reviews (3)
-- Textual data (1)
 - Requirements coverage (1)
-## Classification (25)
+## Classification (24)
 - Issues (11)
-- Sentiments (5)
+- Sentiments (4)
 - Commits (2)
 - Self-admitted technical debt (2)
 - Stack Overflow posts (1)
@@ -36,23 +35,21 @@ markmap:
 - Code review comments (1)
 - Dockerfiles (1)
 ## Detection (16)
+- Code smells (2)
 - Uncivil comments (2)
-- Incident root causes (1)
 - Topics (1)
 - Toxicity (1)
 - Offensive language (1)
 - Confusion comments (1)
+- Code clone (1)
 - Noisy comments (1)
+- Defective code changes (1)
 - Self-admitted technical debt (1)
-- Code smells (1)
 - Software failure news (1)
 - Highly detailed news (1)
 - Duplicated software incidents (1)
 - Ponzi contracts (1)
-- Depression (1)
-- Suicide (1)
-## Enhancement (3)
-- Textual data (2)
+## Enhancement (1)
 - Jupyter notebooks (1)
 ## Extraction (6)
 - Problematic features (1)
@@ -61,25 +58,25 @@ markmap:
 - Code questions (1)
 - Software incident information (1)
 - Code comment constrains (1)
-## Generation (24)
+## Generation (25)
 - Code review comments (7)
-- Code reviews (2)
+- Code reviews (3)
 - Cypher queries (2)
 - Repository-based responses (2)
 - API usage patterns (1)
-- Mitigation plans (1)
 - Code summaries (1)
 - API sequences (1)
 - Issue report templates (1)
 - Pull request titles (1)
-- Pairs of sentences (1)
 - Issue titles (1)
 - Video transcript summaries (1)
 - Civil comments (1)
+- Commit messages (1)
+- Code change comments (1)
 - Software failure summaries (1)
-## Prediction (4)
+## Prediction (5)
+- Code change quality (2)
 - Story points (1)
-- Code change quality (1)
 - Code review necessity (1)
 - Bug report priority (1)
 ## Retrieval (4)

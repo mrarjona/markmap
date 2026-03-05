@@ -10,19 +10,20 @@ markmap:
   colorFreezeLevel: 2
   color:
    - black
-   - "#797979"
-   - "#d65f5f"
-   - "#956cb4"
    - "#dc7ec0"
+   - "#d65f5f"
+   - "#8c613c"
+   - "#797979"
    - "#ee854a"
    - "#6acc64"
-   - "#8c613c"
+   - "#956cb4"
 ---
 
-# Enabling contributions (51)
-## Assessment (2)
+# Enabling contributions (50)
+## Assessment (3)
 - GPT-developer conversations (1)
 - Issues annotations (1)
+- Code summaries (1)
 ## Classification (7)
 - Commits (2)
 - Prompts (2)
@@ -43,21 +44,18 @@ markmap:
 - Buggy programs (1)
 - Dafny programs (1)
 - Python tests (1)
-## Extraction (17)
-- Features (12)
+## Extraction (18)
+- Features (13)
 - Code (2)
 - Keywords (1)
 - Pre-train model metadata (1)
 - Pre-train model naming conventions (1)
-## Generation (9)
+## Generation (6)
 - Code explanations (1)
 - Issue report template summaries (1)
 - Code problem solutions (1)
 - Plot instructions (1)
 - Plot descriptions (1)
-- Wikipedia passage summaries (1)
-- Long-form questions (1)
-- Contradictory statements (1)
 - Different meaning sentences (1)
 ## Retrieval (1)
 - Hardware libraries (1)

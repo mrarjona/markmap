@@ -10,19 +10,19 @@ markmap:
   colorFreezeLevel: 2
   color:
    - black
-   - "#dc7ec0"
-   - "#d65f5f"
    - "#8c613c"
-   - "#797979"
-   - "#ee854a"
    - "#6acc64"
    - "#956cb4"
+   - "#dc7ec0"
+   - "#4878d0"
+   - "#ee854a"
+   - "#d65f5f"
 ---
 
-# Enabling contributions (50)
+# Enabling contributions (47)
 ## Assessment (3)
 - GPT-developer conversations (1)
-- Issues annotations (1)
+- Issue annotations (1)
 - Code summaries (1)
 ## Classification (7)
 - Commits (2)
@@ -30,11 +30,10 @@ markmap:
 - App reviews (1)
 - Human-centric issues (1)
 - GPT-developer conversations (1)
-## Detection (10)
+## Detection (9)
 - Topics (3)
 - Gender reviews (1)
 - Relevant Stack Overflow posts (1)
-- Tweet relevance (1)
 - Code change inconsistencies (1)
 - Code (1)
 - Error messages (1)
@@ -44,8 +43,8 @@ markmap:
 - Buggy programs (1)
 - Dafny programs (1)
 - Python tests (1)
-## Extraction (18)
-- Features (13)
+## Extraction (16)
+- Features (11)
 - Code (2)
 - Keywords (1)
 - Pre-train model metadata (1)

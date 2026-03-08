@@ -10,21 +10,21 @@ markmap:
   colorFreezeLevel: 2
   color:
    - black
-   - "#dc7ec0"
-   - "#d65f5f"
    - "#8c613c"
-   - "#797979"
-   - "#ee854a"
    - "#6acc64"
-   - "#4878d0"
    - "#956cb4"
+   - "#dc7ec0"
+   - "#4878d0"
+   - "#ee854a"
+   - "#797979"
+   - "#d65f5f"
 ---
 
-# Main contributions (85)
+# Main contributions (77)
 ## Assessment (4)
 - Code reviews (3)
 - Requirements coverage (1)
-## Classification (24)
+## Classification (23)
 - Issues (11)
 - Sentiments (4)
 - Commits (2)
@@ -33,15 +33,10 @@ markmap:
 - Code reviews (1)
 - Video frames (1)
 - Code review comments (1)
-- Dockerfiles (1)
-## Detection (16)
-- Code smells (2)
+## Detection (11)
 - Uncivil comments (2)
 - Topics (1)
-- Toxicity (1)
-- Offensive language (1)
 - Confusion comments (1)
-- Code clone (1)
 - Noisy comments (1)
 - Defective code changes (1)
 - Self-admitted technical debt (1)
@@ -74,11 +69,9 @@ markmap:
 - Commit messages (1)
 - Code change comments (1)
 - Software failure summaries (1)
-## Prediction (5)
+## Prediction (3)
 - Code change quality (2)
-- Story points (1)
 - Code review necessity (1)
-- Bug report priority (1)
 ## Retrieval (4)
 - APIs (1)
 - Microservices (1)

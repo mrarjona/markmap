@@ -32,6 +32,16 @@ import { childSelector, simpleHash } from './util';
 
 export const globalCSS = css;
 
+/**
+ * Data bound to each collapse/expand circle element.
+ * For the bidirectional root two circles are created (one per side);
+ * for all other nodes exactly one circle is created.
+ */
+interface ICircleData {
+  node: INode;
+  side: 'left' | 'right';
+}
+
 const SELECTOR_NODE = 'g.markmap-node';
 const SELECTOR_LINK = 'path.markmap-link';
 const SELECTOR_HIGHLIGHT = 'g.markmap-highlight';
@@ -165,6 +175,56 @@ export class Markmap {
     this.toggleNode(d, recursive);
   };
 
+  handleCircleClick = (e: MouseEvent, d: ICircleData) => {
+    let recursive = this.options.toggleRecursively;
+    if (isMacintosh ? e.metaKey : e.ctrlKey) recursive = !recursive;
+    this.toggleSide(d, recursive);
+  };
+
+  async toggleSide({ node, side }: ICircleData, recursive = false) {
+    if (this._isBidirectionalRoot(node)) {
+      const sideChildren = (node.children || []).filter(
+        (c) => c.state.side === side,
+      );
+      const allFolded = sideChildren.every((c) => !!c.payload?.fold);
+      const fold = allFolded ? 0 : 1;
+      for (const child of sideChildren) {
+        if (recursive) {
+          walkTree(child, (item, next) => {
+            item.payload = { ...item.payload, fold };
+            next();
+          });
+        } else {
+          child.payload = { ...child.payload, fold };
+        }
+      }
+      await this.renderData(node);
+    } else {
+      await this.toggleNode(node, recursive);
+    }
+  }
+
+  private _isBidirectionalRoot(node: INode): boolean {
+    return node.state.depth === 1 && (node.children?.length ?? 0) >= 2;
+  }
+
+  private _getCircleSide(d: ICircleData): 'left' | 'right' {
+    return this._isBidirectionalRoot(d.node)
+      ? d.side
+      : (d.node.state.side ?? 'right');
+  }
+
+  private _getSideFolded(node: INode, side: 'left' | 'right'): boolean {
+    if (this._isBidirectionalRoot(node)) {
+      const sideChildren =
+        node.children?.filter((c) => c.state.side === side) || [];
+      return (
+        sideChildren.length > 0 && sideChildren.every((c) => !!c.payload?.fold)
+      );
+    }
+    return !!node.payload?.fold && !!node.children?.length;
+  }
+
   private _initializeData(node: IPureNode | INode) {
     let nodeId = 0;
     const { color, initialExpandLevel } = this.options;
@@ -245,11 +305,53 @@ export class Markmap {
     const tree = layout.hierarchy(this.state.data);
     layout(tree);
     const fnodes = tree.descendants();
+
+    // Determine which first-level nodes go to the left side.
+    // Math.ceil(n/2) go left; the rest go right.
+    // For odd counts, the extra child goes to the left side.
+    // The root node is not in leftSet and keeps side='right' (neutral center).
+    const firstLevelChildren = tree.children || [];
+    const leftCount = Math.ceil(firstLevelChildren.length / 2);
+    const leftChildren = firstLevelChildren.slice(0, leftCount);
+    const rightChildren = firstLevelChildren.slice(leftCount);
+    const leftSet = new Set<INode>();
+    leftChildren.forEach((fnode) => {
+      fnode.each((n) => leftSet.add(n.data));
+    });
+
+    // Re-center each side's subtree around the root's vertical position so
+    // that the left and right branches are symmetrically aligned with the root
+    // rather than being laid out as the top-half and bottom-half of one unified
+    // top-down tree (which is what flextree produces by default).
+    const rootX = tree.x;
+    let leftShift = 0;
+    let rightShift = 0;
+    const leftFnodes = leftChildren.flatMap((fc) => fc.descendants());
+    if (leftFnodes.length > 0) {
+      const leftTop = min(leftFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+      const leftBottom = max(leftFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+      leftShift = rootX - (leftTop + leftBottom) / 2;
+    }
+    const rightFnodes = rightChildren.flatMap((fc) => fc.descendants());
+    if (rightFnodes.length > 0) {
+      const rightTop = min(rightFnodes, (n) => n.x - n.xSize / 2) ?? 0;
+      const rightBottom = max(rightFnodes, (n) => n.x + n.xSize / 2) ?? 0;
+      rightShift = rootX - (rightTop + rightBottom) / 2;
+    }
+
+    const rootWidth = tree.ySize - spacingHorizontal;
     fnodes.forEach((fnode) => {
       const node = fnode.data;
+      const isLeft = leftSet.has(node);
+      node.state.side = isLeft ? 'left' : 'right';
+      // Apply the per-side vertical shift: root gets no shift, left/right groups
+      // are independently re-centered around the root's vertical position.
+      const yShift = fnode === tree ? 0 : isLeft ? leftShift : rightShift;
       node.state.rect = {
-        x: fnode.y,
-        y: fnode.x - fnode.xSize / 2,
+        x: isLeft
+          ? rootWidth - fnode.y - fnode.ySize + spacingHorizontal
+          : fnode.y,
+        y: fnode.x - fnode.xSize / 2 + yShift,
         width: fnode.ySize - spacingHorizontal,
         height: fnode.xSize,
       };
@@ -404,31 +506,38 @@ export class Markmap {
       .attr('stroke-width', 0);
     const mmLineMerge = mmLine.merge(mmLineEnter);
 
-    // Circle to link to children of the node
+    // Circle to link to children of the node.
+    // For the bidirectional root, two circles are bound (one per side).
     const mmCircle = mmGMerge
       .selectAll<
         SVGCircleElement,
-        INode
+        ICircleData
       >(childSelector<SVGCircleElement>('circle'))
       .data(
-        (d) => (d.children?.length ? [d] : []),
-        (d) => d.state.key,
+        (d): ICircleData[] => {
+          if (!d.children?.length) return [];
+          if (this._isBidirectionalRoot(d)) {
+            return [
+              { node: d, side: 'left' },
+              { node: d, side: 'right' },
+            ];
+          }
+          return [{ node: d, side: d.state.side ?? 'right' }];
+        },
+        (d) =>
+          d.node.state.key +
+          (this._isBidirectionalRoot(d.node) ? `-${d.side}` : ''),
       );
     const mmCircleEnter = mmCircle
       .enter()
       .append('circle')
       .attr('stroke-width', 0)
       .attr('r', 0)
-      .on('click', (e, d) => this.handleClick(e, d))
+      .on('click', (e, d) => this.handleCircleClick(e, d))
       .on('mousedown', stopPropagation);
     const mmCircleMerge = mmCircleEnter
       .merge(mmCircle)
-      .attr('stroke', (d) => color(d))
-      .attr('fill', (d) =>
-        d.payload?.fold && d.children
-          ? color(d)
-          : 'var(--markmap-circle-open-bg)',
-      );
+      .attr('stroke', (d) => color(d.node));
 
     const observer = this._observer;
     const mmFo = mmGMerge
@@ -443,7 +552,13 @@ export class Markmap {
     const mmFoEnter = mmFo
       .enter()
       .append('foreignObject')
-      .attr('class', 'markmap-foreign')
+      .attr('class', (d) => {
+        const classes = ['markmap-foreign'];
+        if (d.state.depth === 1 && this.options.rootNodeBold) {
+          classes.push('markmap-foreign-root-bold');
+        }
+        return classes.join(' ');
+      })
       .attr('x', paddingX)
       .attr('y', 0)
       .style('opacity', 0)
@@ -491,7 +606,9 @@ export class Markmap {
       .attr('d', (d) => {
         const originRect = getOriginSourceRect(d.target);
         const pathOrigin: [number, number] = [
-          originRect.x + originRect.width,
+          d.target.state.side === 'left'
+            ? originRect.x
+            : originRect.x + originRect.width,
           originRect.y + originRect.height,
         ];
         return linkShape({ source: pathOrigin, target: pathOrigin });
@@ -518,14 +635,21 @@ export class Markmap {
 
     mmGEnter.attr('transform', (d) => {
       const originRect = getOriginSourceRect(d);
-      return `translate(${originRect.x + originRect.width - d.state.rect.width},${
+      const x =
+        d.state.side === 'left'
+          ? originRect.x
+          : originRect.x + originRect.width - d.state.rect.width;
+      return `translate(${x},${
         originRect.y + originRect.height - d.state.rect.height
       })`;
     });
     this.transition(mmGExit)
       .attr('transform', (d) => {
         const targetRect = getOriginTargetRect(d);
-        const targetX = targetRect.x + targetRect.width - d.state.rect.width;
+        const targetX =
+          d.state.side === 'left'
+            ? targetRect.x
+            : targetRect.x + targetRect.width - d.state.rect.width;
         const targetY = targetRect.y + targetRect.height - d.state.rect.height;
         return `translate(${targetX},${targetY})`;
       })
@@ -540,11 +664,11 @@ export class Markmap {
       childSelector<SVGLineElement>('line'),
     );
     this.transition(mmLineExit)
-      .attr('x1', (d) => d.state.rect.width)
+      .attr('x1', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
       .attr('stroke-width', 0);
     mmLineEnter
-      .attr('x1', (d) => d.state.rect.width)
-      .attr('x2', (d) => d.state.rect.width);
+      .attr('x1', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width))
+      .attr('x2', (d) => (d.state.side === 'left' ? 0 : d.state.rect.width));
     mmLineMerge
       .attr('y1', (d) => d.state.rect.height + lineWidth(d) / 2)
       .attr('y2', (d) => d.state.rect.height + lineWidth(d) / 2);
@@ -554,13 +678,20 @@ export class Markmap {
       .attr('stroke', (d) => color(d))
       .attr('stroke-width', lineWidth);
 
-    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, INode>(
+    const mmCircleExit = mmGExit.selectAll<SVGCircleElement, ICircleData>(
       childSelector<SVGCircleElement>('circle'),
     );
     this.transition(mmCircleExit).attr('r', 0).attr('stroke-width', 0);
     mmCircleMerge
-      .attr('cx', (d) => d.state.rect.width)
-      .attr('cy', (d) => d.state.rect.height + lineWidth(d) / 2);
+      .attr('cx', (d) =>
+        this._getCircleSide(d) === 'left' ? 0 : d.node.state.rect.width,
+      )
+      .attr('cy', (d) => d.node.state.rect.height + lineWidth(d.node) / 2)
+      .attr('fill', (d) =>
+        this._getSideFolded(d.node, d.side)
+          ? color(d.node)
+          : 'var(--markmap-circle-open-bg)',
+      );
     this.transition(mmCircleMerge).attr('r', 6).attr('stroke-width', '1.5');
 
     this.transition(mmFoExit).style('opacity', 0);
@@ -573,7 +704,9 @@ export class Markmap {
       .attr('d', (d) => {
         const targetRect = getOriginTargetRect(d.target);
         const pathTarget: [number, number] = [
-          targetRect.x + targetRect.width,
+          d.target.state.side === 'left'
+            ? targetRect.x
+            : targetRect.x + targetRect.width,
           targetRect.y + targetRect.height + lineWidth(d.target) / 2,
         ];
         return linkShape({ source: pathTarget, target: pathTarget });
@@ -587,14 +720,19 @@ export class Markmap {
       .attr('d', (d) => {
         const origSource = d.source;
         const origTarget = d.target;
+        const isLeft = origTarget.state.side === 'left';
         const source: [number, number] = [
-          origSource.state.rect.x + origSource.state.rect.width,
+          isLeft
+            ? origSource.state.rect.x
+            : origSource.state.rect.x + origSource.state.rect.width,
           origSource.state.rect.y +
             origSource.state.rect.height +
             lineWidth(origSource) / 2,
         ];
         const target: [number, number] = [
-          origTarget.state.rect.x,
+          isLeft
+            ? origTarget.state.rect.x + origTarget.state.rect.width
+            : origTarget.state.rect.x,
           origTarget.state.rect.y +
             origTarget.state.rect.height +
             lineWidth(origTarget) / 2,
@@ -753,6 +891,15 @@ export class Markmap {
       .call(this.zoom.transform, newTransform)
       .end()
       .catch(noop);
+  }
+
+  /**
+   * Return the D3-rendered SVG markup as a string.
+   */
+  getSVG(): string {
+    const node = this.svg.node();
+    if (!node) return '';
+    return new XMLSerializer().serializeToString(node);
   }
 
   destroy() {

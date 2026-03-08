@@ -54,6 +54,8 @@ export interface INodeState {
     width: number;
     height: number;
   };
+  /** Side in bidirectional layout ('left' or 'right'); only set after layout */
+  side?: 'left' | 'right';
 }
 
 export type JSScriptItem = {

@@ -7,3 +7,5 @@ packages/*/dist
 packages/*/coverage
 packages/*/types
 *.tsbuildinfo
+
+**/.DS_Store

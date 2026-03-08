@@ -31,4 +31,5 @@ export const defaultOptions: IMarkmapOptions = {
   paddingX: 8,
   spacingHorizontal: 80,
   spacingVertical: 5,
+  rootNodeBold: false,
 };
